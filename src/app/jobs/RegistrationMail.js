@@ -6,7 +6,7 @@ class RegistrationMail {
   }
 
   async handle({ data }) {
-    const { start_date, end_date, student, price } = data;
+    const { start_date, end_date, student, price, duration, title } = data;
 
     await Mail.sendMail({
       to: `${student.name} <${student.email}>`,
@@ -15,6 +15,8 @@ class RegistrationMail {
       context: {
         student: student.name,
         price,
+        duration,
+        title,
         start_date,
         end_date,
       },

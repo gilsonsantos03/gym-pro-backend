@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 import { addMonths, parseISO, format } from 'date-fns';
 import pt from 'date-fns/locale/pt';
+import { Op } from 'sequelize';
 import Registration from '../models/Registration';
 import Student from '../models/Student';
 import Plan from '../models/Plan';
@@ -34,7 +35,7 @@ class RegistrationController {
 
       const plan = await Plan.findOne({
         where: { id: plan_id },
-        attributes: ['id', 'title', 'price', 'duration'],
+        attributes: ['title', 'price', 'duration'],
       });
 
       // checa se aquele plano existe
@@ -52,7 +53,7 @@ class RegistrationController {
           .json({ error: 'This Student already have a registration' });
       }
 
-      const { duration, price } = plan;
+      const { duration, price, title } = plan;
 
       // convertendo a data de string pro formato do JS
       const parsedData = parseISO(start_date);
@@ -75,6 +76,8 @@ class RegistrationController {
       await Queue.add(RegistrationMail.key, {
         student,
         price,
+        duration,
+        title,
         start_date: format(parseISO(start_date), "'dia' dd 'de' MMMM'", {
           locale: pt,
         }),
@@ -93,6 +96,72 @@ class RegistrationController {
         plan,
         student,
       });
+    } catch (error) {
+      // console.log(error);
+      return res.status(400).json({ error: 'Something went wrong' });
+    }
+  }
+
+  async index(req, res) {
+    try {
+      const { q = '', page = 1 } = req.query;
+
+      // filtrando os estudantes se o query params de um nome foi passado
+      const registrations = q
+        ? await Registration.findAll({
+            where: {
+              name: { [Op.like]: `%${q}%` },
+            },
+            attributes: [
+              'id',
+              'student_id',
+              'plan_id',
+              'price',
+              'start_date',
+              'end_date',
+            ],
+            // para controlar a quantidade de estudantes que será mostrado por página
+            offset: (page - 1) * 10,
+            limit: 10,
+            include: [
+              {
+                model: Student,
+                as: 'student',
+                attributes: ['name', 'email'],
+              },
+              {
+                model: Plan,
+                as: 'plan',
+                attributes: ['title', 'price', 'duration'],
+              },
+            ],
+          })
+        : await Registration.findAll({
+            attributes: [
+              'id',
+              'student_id',
+              'plan_id',
+              'price',
+              'start_date',
+              'end_date',
+            ],
+            offset: (page - 1) * 10,
+            limit: 10,
+            include: [
+              {
+                model: Student,
+                as: 'student',
+                attributes: ['name', 'email'],
+              },
+              {
+                model: Plan,
+                as: 'plan',
+                attributes: ['title', 'price', 'duration'],
+              },
+            ],
+          });
+
+      return res.json(registrations);
     } catch (error) {
       // console.log(error);
       return res.status(400).json({ error: 'Something went wrong' });
