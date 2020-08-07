@@ -34,5 +34,6 @@ routes.delete('/plans/:plan_id', PlanController.delete);
 // rotas de matrícula
 routes.post('/registrations', RegistrationController.store);
 routes.get('/registrations', RegistrationController.index);
+routes.get('/registrations/:registration_id', RegistrationController.show);
 
 export default routes;

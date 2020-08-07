@@ -167,6 +167,43 @@ class RegistrationController {
       return res.status(400).json({ error: 'Something went wrong' });
     }
   }
+
+  async show(req, res) {
+    const { registration_id } = req.params;
+
+    if (!registration_id || !registration_id.match(/^-{0,1}\d+$/)) {
+      return res.status(400).json({ err: 'Registration id not provided' });
+    }
+
+    const registration = await Registration.findByPk(registration_id, {
+      attributes: [
+        'id',
+        'student_id',
+        'plan_id',
+        'price',
+        'start_date',
+        'end_date',
+      ],
+      include: [
+        {
+          model: Student,
+          as: 'student',
+          attributes: ['name', 'email'],
+        },
+        {
+          model: Plan,
+          as: 'plan',
+          attributes: ['title', 'price', 'duration'],
+        },
+      ],
+    });
+
+    if (!registration) {
+      return res.status(404).json({ error: 'Registration not found' });
+    }
+
+    return res.json(registration);
+  }
 }
 
 export default new RegistrationController();
