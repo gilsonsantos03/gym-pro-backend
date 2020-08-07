@@ -5,7 +5,8 @@ import Registration from '../models/Registration';
 import Student from '../models/Student';
 import Plan from '../models/Plan';
 
-import Mail from '../../lib/Mail';
+import RegistrationMail from '../jobs/RegistrationMail';
+import Queue from '../../lib/Queue';
 
 class RegistrationController {
   async store(req, res) {
@@ -70,20 +71,16 @@ class RegistrationController {
         price: finalPrice,
       });
 
-      await Mail.sendMail({
-        to: `${student.name} <${student.email}>`,
-        subject: 'Registro de aluno',
-        template: 'registration',
-        context: {
-          student: student.name,
-          price: plan.price,
-          start_date: format(parseISO(start_date), "'dia' dd 'de' MMMM'", {
-            locale: pt,
-          }),
-          end_date: format(end_date, "'dia' dd 'de' MMMM'", {
-            locale: pt,
-          }),
-        },
+      // enviando email com bee queue
+      await Queue.add(RegistrationMail.key, {
+        student,
+        price,
+        start_date: format(parseISO(start_date), "'dia' dd 'de' MMMM'", {
+          locale: pt,
+        }),
+        end_date: format(end_date, "'dia' dd 'de' MMMM'", {
+          locale: pt,
+        }),
       });
 
       return res.json({
