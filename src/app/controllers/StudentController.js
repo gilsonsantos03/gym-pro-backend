@@ -1,5 +1,4 @@
 import * as Yup from 'yup';
-import { Op } from 'sequelize';
 import Student from '../models/Student';
 
 class StudentController {
@@ -73,24 +72,14 @@ class StudentController {
 
   async index(req, res) {
     try {
-      const { q = '', page = 1 } = req.query;
+      const { page = 1, perPage = 10 } = req.query;
 
-      // filtrando os estudantes se o query params de um nome foi passado
-      const students = q
-        ? await Student.findAll({
-            where: {
-              name: { [Op.like]: `%${q}%` },
-            },
-            attributes: ['id', 'name', 'email', 'age', 'height', 'weight'],
-            // para controlar a quantidade de estudantes que será mostrado por página
-            offset: (page - 1) * 10,
-            limit: 10,
-          })
-        : await Student.findAll({
-            attributes: ['id', 'name', 'email', 'age', 'height', 'weight'],
-            offset: (page - 1) * 10,
-            limit: 10,
-          });
+      const students = await Student.findAll({
+        attributes: ['id', 'name', 'email', 'age', 'height', 'weight'],
+        // para controlar a quantidade de estudantes que serão mostrados por página
+        offset: (page - 1) * perPage,
+        limit: perPage,
+      });
 
       return res.json(students);
     } catch (error) {

@@ -77,34 +77,19 @@ class CheckinController {
         return res.status(404).json({ error: 'Student not found' });
       }
 
-      const { q = '', page = 1 } = req.query;
+      const { page = 1, perPage = 7 } = req.query;
 
-      // filtrando os checkins se o query params de um nome foi passado
-      const checkins = q
-        ? await Checkin.findAll({
-            where: {
-              name: { [Op.like]: `%${q}%` },
-            },
-            attributes: ['id', 'created_at'],
-            // para controlar a quantidade de checkins que será mostrado por página
-            offset: (page - 1) * 7,
-            limit: 7,
-            include: {
-              model: Student,
-              as: 'student',
-              attributes: ['id', 'name', 'email', 'weight', 'height', 'age'],
-            },
-          })
-        : await Checkin.findAll({
-            attributes: ['id', 'created_at'],
-            offset: (page - 1) * 7,
-            limit: 7,
-            include: {
-              model: Student,
-              as: 'student',
-              attributes: ['id', 'name', 'email', 'weight', 'height', 'age'],
-            },
-          });
+      const checkins = await Checkin.findAll({
+        attributes: ['id', 'created_at'],
+        // para controlar a quantidade de checkins que será mostrado por página
+        offset: (page - 1) * perPage,
+        limit: perPage,
+        include: {
+          model: Student,
+          as: 'student',
+          attributes: ['id', 'name', 'email', 'weight', 'height', 'age'],
+        },
+      });
 
       return res.json(checkins);
     } catch (error) {

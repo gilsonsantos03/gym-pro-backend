@@ -1,5 +1,4 @@
 import * as Yup from 'yup';
-import { Op } from 'sequelize';
 import Plan from '../models/Plan';
 
 class PlanController {
@@ -34,24 +33,14 @@ class PlanController {
 
   async index(req, res) {
     try {
-      const { q = '', page = 1 } = req.query;
+      const { page = 1, perPage = 10 } = req.query;
 
-      // filtrando os estudantes se o query params de um nome foi passado
-      const plans = q
-        ? await Plan.findAll({
-            where: {
-              name: { [Op.like]: `%${q}%` },
-            },
-            attributes: ['id', 'title', 'duration', 'price'],
-            // para controlar a quantidade de estudantes que será mostrado por página
-            offset: (page - 1) * 10,
-            limit: 10,
-          })
-        : await Plan.findAll({
-            attributes: ['id', 'title', 'duration', 'price'],
-            offset: (page - 1) * 10,
-            limit: 10,
-          });
+      const plans = await Plan.findAll({
+        attributes: ['id', 'title', 'duration', 'price'],
+        // para controlar a quantidade de planos que serão mostrados por página
+        offset: (page - 1) * perPage,
+        limit: perPage,
+      });
 
       return res.json(plans);
     } catch (error) {

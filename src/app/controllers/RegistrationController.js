@@ -1,7 +1,6 @@
 import * as Yup from 'yup';
 import { addMonths, parseISO, format, isBefore } from 'date-fns';
 import pt from 'date-fns/locale/pt';
-import { Op } from 'sequelize';
 import Registration from '../models/Registration';
 import Student from '../models/Student';
 import Plan from '../models/Plan';
@@ -104,62 +103,33 @@ class RegistrationController {
 
   async index(req, res) {
     try {
-      const { q = '', page = 1 } = req.query;
+      const { page = 1, perPage = 10 } = req.query;
 
-      // filtrando os estudantes se o query params de um nome foi passado
-      const registrations = q
-        ? await Registration.findAll({
-            where: {
-              name: { [Op.like]: `%${q}%` },
-            },
-            attributes: [
-              'id',
-              'student_id',
-              'plan_id',
-              'price',
-              'start_date',
-              'end_date',
-            ],
-            // para controlar a quantidade de estudantes que será mostrado por página
-            offset: (page - 1) * 10,
-            limit: 10,
-            include: [
-              {
-                model: Student,
-                as: 'student',
-                attributes: ['name', 'email'],
-              },
-              {
-                model: Plan,
-                as: 'plan',
-                attributes: ['title', 'price', 'duration'],
-              },
-            ],
-          })
-        : await Registration.findAll({
-            attributes: [
-              'id',
-              'student_id',
-              'plan_id',
-              'price',
-              'start_date',
-              'end_date',
-            ],
-            offset: (page - 1) * 10,
-            limit: 10,
-            include: [
-              {
-                model: Student,
-                as: 'student',
-                attributes: ['name', 'email'],
-              },
-              {
-                model: Plan,
-                as: 'plan',
-                attributes: ['title', 'price', 'duration'],
-              },
-            ],
-          });
+      const registrations = await Registration.findAll({
+        attributes: [
+          'id',
+          'student_id',
+          'plan_id',
+          'price',
+          'start_date',
+          'end_date',
+        ],
+        // para controlar a quantidade de matrículas que serão mostradas por página
+        offset: (page - 1) * perPage,
+        limit: perPage,
+        include: [
+          {
+            model: Student,
+            as: 'student',
+            attributes: ['name', 'email'],
+          },
+          {
+            model: Plan,
+            as: 'plan',
+            attributes: ['title', 'price', 'duration'],
+          },
+        ],
+      });
 
       return res.json(registrations);
     } catch (error) {

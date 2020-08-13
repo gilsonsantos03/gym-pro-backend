@@ -8,6 +8,8 @@ import StudentController from './app/controllers/StudentController';
 import PlanController from './app/controllers/PlanController';
 import RegistrationController from './app/controllers/RegistrationController';
 import CheckinController from './app/controllers/CheckinController';
+import HelpOrderController from './app/controllers/HelpOrderController';
+import AnswerController from './app/controllers/AnswerController';
 
 const routes = new Router();
 
@@ -17,6 +19,14 @@ routes.post('/sessions', SessionController.store);
 // rotas de checkin
 routes.post('/students/:student_id/checkins', CheckinController.store);
 routes.get('/students/:student_id/checkins', CheckinController.index);
+
+// rotas de help_orders
+routes.get('/students/help-orders', HelpOrderController.index);
+routes.get('/students/:student_id/help-orders', HelpOrderController.show);
+routes.post('/students/:student_id/help-orders', HelpOrderController.store);
+
+// rota de resposta da academia
+routes.post('/help-orders/:help_order_id/answer', AnswerController.store);
 
 // middleware de autenticação
 routes.use(authMiddleware);
